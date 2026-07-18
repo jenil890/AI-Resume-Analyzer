@@ -1,10 +1,10 @@
 import express from 'express';
-import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import { readFileSync } from 'fs';
 import path from 'path';
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
 import authRoutes from './routes/auth.js';
 import resumeRoutes from './routes/resume.js';
 
@@ -40,21 +40,14 @@ if (getApps().length === 0) {
   }
 }
 
+export const db = getFirestore();
+
 const app = express();
 
 // Express Application middlewares
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// DB Connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/resume-analyzer';
-mongoose
-  .connect(MONGODB_URI)
-  .then(() => console.log('Successfully connected to MongoDB.'))
-  .catch((err) => {
-    console.error('MongoDB connection error:', err.message);
-  });
 
 // Routes
 app.use('/api/auth', authRoutes);

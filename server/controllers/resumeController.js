@@ -1,7 +1,7 @@
 import pdfParse from 'pdf-parse';
 import mammoth from 'mammoth';
 import { GoogleGenAI } from '@google/genai';
-import Analysis from '../models/Analysis.js';
+import { db } from '../server.js';
 
 // Parse PDF buffer to text
 const parsePDF = async (buffer) => {
@@ -243,17 +243,21 @@ Format the output strictly as JSON matching this schema:
       parsedResult = await callGemini(prompt, apiKey);
     }
 
-    // Save analysis to database
-    const analysis = new Analysis({
+    // Save analysis to Firestore
+    const analysisRef = db.collection('analyses').doc();
+    const analysisData = {
       userId: req.user.id,
       resumeName: req.file.originalname,
       atsScore: parsedResult.atsScore,
       analysisResult: parsedResult,
+      createdAt: new Date()
+    };
+    await analysisRef.set(analysisData);
+
+    res.status(201).json({
+      _id: analysisRef.id,
+      ...analysisData
     });
-
-    await analysis.save();
-
-    res.status(201).json(analysis);
   } catch (error) {
     console.error('Resume upload & analysis error:', error);
     let userMessage = error.message || 'Server error during resume analysis';
@@ -273,9 +277,20 @@ Format the output strictly as JSON matching this schema:
 
 export const getHistory = async (req, res) => {
   try {
-    const history = await Analysis.find({ userId: req.user.id })
-      .select('resumeName atsScore createdAt')
-      .sort({ createdAt: -1 });
+    const snapshot = await db.collection('analyses')
+      .where('userId', '==', req.user.id)
+      .get();
+    
+    const history = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        _id: doc.id,
+        resumeName: data.resumeName,
+        atsScore: data.atsScore,
+        createdAt: data.createdAt ? data.createdAt.toDate() : new Date()
+      };
+    }).sort((a, b) => b.createdAt - a.createdAt); // Sort in-memory to avoid needing composite indexes in Firestore
+    
     res.json(history);
   } catch (error) {
     console.error('Fetch history error:', error);
@@ -285,11 +300,18 @@ export const getHistory = async (req, res) => {
 
 export const getAnalysisById = async (req, res) => {
   try {
-    const analysis = await Analysis.findOne({ _id: req.params.id, userId: req.user.id });
-    if (!analysis) {
+    const docRef = db.collection('analyses').doc(req.params.id);
+    const doc = await docRef.get();
+    
+    if (!doc.exists || doc.data().userId !== req.user.id) {
       return res.status(404).json({ message: 'Analysis report not found' });
     }
-    res.json(analysis);
+    
+    res.json({
+      _id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt ? doc.data().createdAt.toDate() : new Date()
+    });
   } catch (error) {
     console.error('Fetch report details error:', error);
     res.status(500).json({ message: 'Server error during report retrieval' });
@@ -298,10 +320,14 @@ export const getAnalysisById = async (req, res) => {
 
 export const deleteAnalysis = async (req, res) => {
   try {
-    const result = await Analysis.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
-    if (!result) {
+    const docRef = db.collection('analyses').doc(req.params.id);
+    const doc = await docRef.get();
+    
+    if (!doc.exists || doc.data().userId !== req.user.id) {
       return res.status(404).json({ message: 'Analysis report not found' });
     }
+    
+    await docRef.delete();
     res.json({ message: 'Analysis history deleted successfully' });
   } catch (error) {
     console.error('Delete report error:', error);
