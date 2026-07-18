@@ -138,9 +138,14 @@ const Landing = () => {
             </div>
             <span className="font-outfit text-lg font-bold">ATS Resume Analyzer</span>
           </div>
-          <p className="text-xs text-slate-400 dark:text-slate-500">
-            &copy; 2026 AI Resume Analyzer. Built for premium screening preparation. All rights reserved.
-          </p>
+          <div className="flex flex-col items-center md:items-start gap-1">
+            <p className="text-xs text-slate-400 dark:text-slate-500">
+              &copy; 2026 AI Resume Analyzer. All rights reserved.
+            </p>
+            <p className="text-xs text-slate-400 dark:text-slate-500">
+              Designed & Developed by <span className="font-semibold text-brand-500 dark:text-brand-400">jenil sabhaya</span>
+            </p>
+          </div>
           <div className="flex items-center gap-6">
             <a href="#features" className="text-xs text-slate-500 dark:text-slate-400 hover:text-brand-500 transition-colors">Privacy</a>
             <a href="#features" className="text-xs text-slate-500 dark:text-slate-400 hover:text-brand-500 transition-colors">Terms</a>
