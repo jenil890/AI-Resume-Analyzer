@@ -12,8 +12,13 @@ dotenv.config();
 
 // Initialize Firebase Admin SDK
 try {
-  const serviceAccountPath = path.resolve('config/firebase-service-account.json');
-  const serviceAccount = JSON.parse(readFileSync(serviceAccountPath, 'utf8'));
+  let serviceAccount;
+  if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+  } else {
+    const serviceAccountPath = path.resolve('config/firebase-service-account.json');
+    serviceAccount = JSON.parse(readFileSync(serviceAccountPath, 'utf8'));
+  }
   initializeApp({
     credential: cert(serviceAccount),
   });
@@ -23,6 +28,7 @@ try {
   console.warn('WARNING: Firebase Admin SDK failed to initialize with JSON.');
   console.warn('Please download your service account key from Firebase Console');
   console.warn('and save it to: server/config/firebase-service-account.json');
+  console.warn('Or set the FIREBASE_SERVICE_ACCOUNT_JSON environment variable.');
   console.warn('Error Details:', error.message);
   console.warn('----------------------------------------------------');
   
@@ -67,6 +73,10 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+}
+
+export default app;
