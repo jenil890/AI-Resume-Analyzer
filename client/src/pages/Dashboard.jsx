@@ -52,21 +52,13 @@ const Dashboard = () => {
     if (score >= 60) return 'border-amber-200 dark:border-amber-800/40';
     return 'border-rose-200 dark:border-rose-800/40';
   };
-
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good Morning';
-    if (hour < 18) return 'Good Afternoon';
-    return 'Good Evening';
-  };
-
   return (
     <div className="space-y-8">
       {/* Header Greeting */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-extrabold font-outfit text-slate-800 dark:text-white">
-            {getGreeting()}, {user?.name || 'Candidate'}!
+            Hello, {user?.name || 'Candidate'}!
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mt-1">
             Analyze your resume compatibility and track progress to your dream job.
