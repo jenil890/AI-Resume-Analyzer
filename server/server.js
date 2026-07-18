@@ -4,38 +4,40 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import { readFileSync } from 'fs';
 import path from 'path';
-import { initializeApp, cert } from 'firebase-admin/app';
+import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import authRoutes from './routes/auth.js';
 import resumeRoutes from './routes/resume.js';
 
 dotenv.config();
 
 // Initialize Firebase Admin SDK
-try {
-  let serviceAccount;
-  if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
-    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
-  } else {
-    const serviceAccountPath = path.resolve('config/firebase-service-account.json');
-    serviceAccount = JSON.parse(readFileSync(serviceAccountPath, 'utf8'));
+if (getApps().length === 0) {
+  try {
+    let serviceAccount;
+    if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+      serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+    } else {
+      const serviceAccountPath = path.resolve('config/firebase-service-account.json');
+      serviceAccount = JSON.parse(readFileSync(serviceAccountPath, 'utf8'));
+    }
+    initializeApp({
+      credential: cert(serviceAccount),
+    });
+    console.log('Firebase Admin SDK initialized successfully.');
+  } catch (error) {
+    console.warn('----------------------------------------------------');
+    console.warn('WARNING: Firebase Admin SDK failed to initialize with JSON.');
+    console.warn('Please download your service account key from Firebase Console');
+    console.warn('and save it to: server/config/firebase-service-account.json');
+    console.warn('Or set the FIREBASE_SERVICE_ACCOUNT_JSON environment variable.');
+    console.warn('Error Details:', error.message);
+    console.warn('----------------------------------------------------');
+    
+    // Fallback for local development
+    initializeApp({
+      projectId: process.env.FIREBASE_PROJECT_ID || 'ai-projects-54eae',
+    });
   }
-  initializeApp({
-    credential: cert(serviceAccount),
-  });
-  console.log('Firebase Admin SDK initialized successfully.');
-} catch (error) {
-  console.warn('----------------------------------------------------');
-  console.warn('WARNING: Firebase Admin SDK failed to initialize with JSON.');
-  console.warn('Please download your service account key from Firebase Console');
-  console.warn('and save it to: server/config/firebase-service-account.json');
-  console.warn('Or set the FIREBASE_SERVICE_ACCOUNT_JSON environment variable.');
-  console.warn('Error Details:', error.message);
-  console.warn('----------------------------------------------------');
-  
-  // Fallback for local development
-  initializeApp({
-    projectId: process.env.FIREBASE_PROJECT_ID || 'ai-projects-54eae',
-  });
 }
 
 const app = express();
