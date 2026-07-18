@@ -143,7 +143,7 @@ const Landing = () => {
               &copy; 2026 AI Resume Analyzer. All rights reserved.
             </p>
             <p className="text-xs text-slate-400 dark:text-slate-500">
-              Designed & Developed by <span className="font-semibold text-brand-500 dark:text-brand-400">jenil sabhaya</span>
+              Designed & Developed by <span className="font-semibold text-brand-500 dark:text-brand-400">Jenil Sabhaya</span>
             </p>
           </div>
           <div className="flex items-center gap-6">
