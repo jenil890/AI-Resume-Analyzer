@@ -20,6 +20,12 @@ if (getApps().length === 0) {
       const serviceAccountPath = path.resolve('config/firebase-service-account.json');
       serviceAccount = JSON.parse(readFileSync(serviceAccountPath, 'utf8'));
     }
+    
+    // Fix double-escaped newlines in private key
+    if (serviceAccount && typeof serviceAccount.private_key === 'string') {
+      serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+    }
+
     initializeApp({
       credential: cert(serviceAccount),
     });
